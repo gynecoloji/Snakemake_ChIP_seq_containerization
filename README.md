@@ -3,7 +3,7 @@
 A comprehensive, production-ready Snakemake workflow for ChIP-seq data analysis, fully containerized with Docker and deployable on HPC systems using Singularity.
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/gynecoloji/chipseq_pipeline)
-![Docker Image Size](https://img.shields.io/docker/image-size/gynecoloji/chipseq_pipeline/v1)
+![Docker Image Size](https://img.shields.io/docker/image-size/gynecoloji/chipseq_pipeline/v1.0)
 ![GitHub Stars](https://img.shields.io/github/stars/gynecoloji/Snakemake_ChIP_seq_containerization?style=social)
 ![License](https://img.shields.io/github/license/gynecoloji/Snakemake_ChIP_seq_containerization)
 
