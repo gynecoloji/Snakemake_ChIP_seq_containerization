@@ -157,12 +157,12 @@ docker images | grep chipseq-pipeline
 docker login
 
 # Tag with your username
-docker tag chipseq-pipeline:v1.0 gynecoloji/chipseq-pipeline:v1.0
-docker tag chipseq-pipeline:v1.0 gynecoloji/chipseq-pipeline:latest
+docker tag chipseq-pipeline:v1.0 gynecoloji/chipseq_pipeline:v1.0
+docker tag chipseq-pipeline:v1.0 gynecoloji/chipseq_pipeline:latest
 
 # Push to Docker Hub
-docker push gynecoloji/chipseq-pipeline:v1.0
-docker push gynecoloji/chipseq-pipeline:latest
+docker push gynecoloji/chipseq_pipeline:v1.0
+docker push gynecoloji/chipseq_pipeline:latest
 ```
 
 ### Converting to Singularity
