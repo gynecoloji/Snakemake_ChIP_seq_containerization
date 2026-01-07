@@ -3,7 +3,7 @@
 A comprehensive, production-ready Snakemake workflow for ChIP-seq data analysis, fully containerized with Docker and deployable on HPC systems using Singularity.
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/gynecoloji/chipseq_pipeline)
-![Docker Image Size](https://img.shields.io/docker/image-size/gynecoloji/chipseq_pipeline)
+![Docker Image Size](https://img.shields.io/docker/image-size/gynecoloji/chipseq_pipeline/v1)
 ![GitHub Stars](https://img.shields.io/github/stars/gynecoloji/Snakemake_ChIP_seq_containerization?style=social)
 ![License](https://img.shields.io/github/license/gynecoloji/Snakemake_ChIP_seq_containerization)
 
@@ -45,7 +45,7 @@ This pipeline performs comprehensive ChIP-seq analysis from raw FASTQ files to p
 ## ✨ Features
 
 - **Complete ChIP-seq workflow**: FastQC → Trimming → Alignment → Filtering → Peak calling
-- **Quality Control**: Comprehensive QC at multiple steps (FastQC, Fastp, alignment metrics)
+- **Simple Quality Control**: Simple QC at multiple steps (FastQC, Fastp, alignment metrics)
 - **Flexible peak calling**: Supports both narrow (transcription factors) and broad (histone marks) peak modes
 - **Input control support**: Optional input normalization for accurate peak calling
 - **Blacklist filtering**: Removes reads from problematic genomic regions
@@ -88,7 +88,7 @@ MACS2 (Peak Calling)
     ↓
 deepTools (BigWig Generation)
     ↓
-Results & QC Reports
+Results & simple QC Reports
 ```
 
 ---
@@ -125,8 +125,9 @@ cd Snakemake_ChIP_seq_containerization
 ```
 
 **Step 2: Ensure you have all required files**
+
 ```bash
-# Required structure:
+# Required structure for docker build:
 # ├── Dockerfile
 # ├── envs/
 # │   ├── snakemake.yaml
@@ -141,6 +142,31 @@ cd Snakemake_ChIP_seq_containerization
 # ├── snakefile_tolerant_ChIPseq
 # └── README.md
 ```
+
+```bash
+# Required structure for whole analysis:
+# ├── Dockerfile
+# ├── data/
+# ├── results/
+# ├── logs/
+# ├── envs/
+# │   ├── snakemake.yaml
+# │   ├── macs2.yaml
+# │   ├── bedtools.yaml
+# │   ├── deeptools.yaml
+# │   └── idr.yaml
+# ├── ref/
+# │   ├── ENSEMBL (hisat2 index files)
+# │   ├── picard.jar
+# │   ├── samples.csv
+# │   ├── gencode.v36.annotation.gtf
+# │   ├── hg38_blacklist_regions.bed
+# │   ├── blacklist-stats-script.py
+# │   └── config.yaml
+# ├── snakefile_tolerant_ChIPseq
+# └── README.md
+```
+
 
 **Step 3: Build the Docker image**
 ```bash
@@ -211,8 +237,9 @@ docker run --rm \
     -v $(pwd)/data:/pipeline/data:ro \
     -v $(pwd)/ref:/pipeline/ref:ro \
     -v $(pwd)/results:/pipeline/results \
+    -v $(pwd)/logs:/pipeline/logs \
     chipseq-pipeline:v1.0 \
-    --cores 8 -n
+    --cores 8 --use-conda -n -s /pipeline/snakefile_tolerant_ChIPseq -p
 ```
 
 **Run full pipeline**
@@ -223,59 +250,50 @@ docker run --rm \
     -v $(pwd)/results:/pipeline/results \
     -v $(pwd)/logs:/pipeline/logs \
     chipseq-pipeline:v1.0 \
-    --cores 8
-```
-
-**Run with memory and CPU limits**
-```bash
-docker run --rm \
-    --memory="16g" \
-    --cpus="8" \
-    -v $(pwd)/data:/pipeline/data:ro \
-    -v $(pwd)/ref:/pipeline/ref:ro \
-    -v $(pwd)/results:/pipeline/results \
-    chipseq-pipeline:v1.0 \
-    --cores 8
+    --cores 8 --use-conda -s /pipeline/snakefile_tolerant_ChIPseq -p
 ```
 
 ### Singularity Usage on HPC
 
 **Basic usage (show help)**
 ```bash
+singularity pull chipseq_pipeline.sif docker://gynecoloji/chipseq_pipeline:v1.0
+
 singularity run chipseq_pipeline.sif
 ```
 
 **Dry run**
 ```bash
 singularity run \
-    --bind /path/to/data:/pipeline/data \
-    --bind /path/to/ref:/pipeline/ref \
-    --bind /path/to/results:/pipeline/results \
+    --bind $(pwd)/data:/pipeline/data \
+    --bind $(pwd)/ref:/pipeline/ref \
+    --bind $(pwd)/results:/pipeline/results \
+    --bind $(pwd)/logs:/pipeline/logs \
     chipseq_pipeline.sif \
-    --cores 8 -n
+    --cores 8 -n --use-conda -s /pipeline/snakefile_tolerant_ChIPseq -p
 ```
 
 **Run full pipeline**
 ```bash
 singularity run \
-    --bind /path/to/data:/pipeline/data \
-    --bind /path/to/ref:/pipeline/ref \
-    --bind /path/to/results:/pipeline/results \
-    --bind /path/to/logs:/pipeline/logs \
+    --bind $(pwd)/data:/pipeline/data \
+    --bind $(pwd)/ref:/pipeline/ref \
+    --bind $(pwd)/results:/pipeline/results \
+    --bind $(pwd)/logs:/pipeline/logs \
     chipseq_pipeline.sif \
-    --cores 8
+    --cores 8 --use-conda -s /pipeline/snakefile_tolerant_ChIPseq -p
 ```
 
 **Interactive mode (for testing/debugging)**
 ```bash
 singularity shell \
-    --bind /path/to/data:/pipeline/data \
-    --bind /path/to/ref:/pipeline/ref \
+    --bind $(pwd)/data:/pipeline/data \
+    --bind $(pwd)/ref:/pipeline/ref \
     chipseq_pipeline.sif
 
 # Inside the container
 Singularity> conda activate snakemake
-Singularity> snakemake -s /pipeline/snakefile_tolerant_ChIPseq -n
+Singularity> snakemake --cores 8 --use-conda -s /pipeline/snakefile_tolerant_ChIPseq -p -n
 ```
 
 ### SLURM Job Submission
@@ -378,7 +396,7 @@ blacklist: "/path/to/hg38-blacklist.v2.bed"
 effective_genome_size: 2913022398
 
 # Sample metadata table
-samples_table: "samples.csv"
+samples_table: "/path/to/samples.csv"
 ```
 
 ### 4. Required Reference Files
